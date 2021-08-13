@@ -26,6 +26,7 @@ getprop menu_Target [tObject]
       put empty into LocalArray ["newFolderIndex"]
    end if
    --
+   if exists (tObject) is empty then return empty
    put the display_View of tObject into displayView
    return displayView
 end menu_Target

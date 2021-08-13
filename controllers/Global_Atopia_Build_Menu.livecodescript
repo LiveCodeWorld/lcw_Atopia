@@ -15,7 +15,7 @@ end mDoubleUp_WikiDomain
 -
 local LocalArray
 
-on menu_Init tObject, mTarget
+getprop menu_Target [tObject]
    put display_FindView ("Atopia", "New Folders") into newFolderView
    put exists (newFolderView) into newFolderViewExists
    put newFolderViewExists into LocalArray ["newFolderViewExists"]
@@ -25,7 +25,10 @@ on menu_Init tObject, mTarget
    else
       put empty into LocalArray ["newFolderIndex"]
    end if
-end menu_Init
+   --
+   put the display_View of tObject into displayView
+   return displayView
+end menu_Target
 
 getprop disabled_UnloadCached
    put the cachedurls into cURLs
@@ -118,15 +121,19 @@ on menu_Refresh
    display_AtopiaCatModel
 end menu_Refresh
 
-on _
-end _
+on submenu_Dev
+   return "Dev | Menu"
+end submenu_Dev
 
-on menu_RecentFederationDomains displayView
+
+--> Dev | Menu
+-
+on _RecentFederationDomains displayView
    put federation_ListRecentDomains() into wikiDomains
    set the displayed_Index ["Recent Federation Domains"] of displayView to wikiDomains
-end menu_RecentFederationDomains
+end _RecentFederationDomains
 
-on menu_LinearTestDisplayed displayView
+on _LinearTestDisplayed displayView
    -- see "menu_FedrayLoadUpdate" for async version
    put the displayed_Index of displayView into atopiaFolders
    --
@@ -144,12 +151,12 @@ on menu_LinearTestDisplayed displayView
    display_FinishedAtopiaUpdate
    -- fedray_UnLoadedUrls
    fedray_ClearCache
-end menu_LinearTestDisplayed
+end _LinearTestDisplayed
 
 on _
 end _
 
-on menu_UpdateFedray displayView
+on _UpdateFedray displayView
    set the cursor to watch
    --
    put atopia_FetchDomainArray() into atopiaDomainArray
@@ -163,16 +170,12 @@ on menu_UpdateFedray displayView
    breakpoint
    fedray_StoreModel fedray
    return resultArray
-end menu_UpdateFedray
+end _UpdateFedray
 
 on _
 end _
 
-on menu_DisplayAtopiaCatModel
-   display_AtopiaCatModel
-end menu_DisplayAtopiaCatModel
-
-on menu_BuildWardsWithoutAtopia displayView
+on _BuildWardsWithoutAtopia displayView
    set the cursor to watch
    --
    put atopia_FetchDomainArray() into fedray
@@ -192,9 +195,9 @@ on menu_BuildWardsWithoutAtopia displayView
    set the title_Menu of displayView to "Global | Fedray | Rebuild | Menu" 
    --
    return resultArray
-end menu_BuildWardsWithoutAtopia
+end _BuildWardsWithoutAtopia
 
-on menu_RebuildNewAtopiaFedray displayView
+on _RebuildNewAtopiaFedray displayView
    put atopia_FetchFolders() into atopiaDomains
    set the displayed_Index of displayView to atopiaDomains
    --
@@ -223,9 +226,9 @@ on menu_RebuildNewAtopiaFedray displayView
    --
    atopia_StoreModel atopiaDomainArray
    return resultArray
-end menu_RebuildNewAtopiaFedray
+end _RebuildNewAtopiaFedray
 
-on menu_RebuildAtopiaFedray displayView
+on _RebuildAtopiaFedray displayView
    put atopia_FetchFolders() into atopiaDomains
    set the displayed_Index of displayView to atopiaDomains
    --
@@ -256,19 +259,19 @@ on menu_RebuildAtopiaFedray displayView
    atopia_StoreDomainArray atopiaDomainArray
    fedray_StoreModel fedray
    return resultArray
-end menu_RebuildAtopiaFedray
+end _RebuildAtopiaFedray
 
 on _
 end _
 
-on menu_CheckDisplayedLastModified displayView
+on _CheckDisplayedLastModified displayView
    put the displayed_Index of displayView into wikiDomains
    put fedwiki_CheckWithSitemapArray (wikiDomains, 7) into resultArray
    --
    display_Data resultArray, "7 days", "fedwiki_CheckWithSitemapArray"
-end menu_CheckDisplayedLastModified
+end _CheckDisplayedLastModified
 
-on menu_UpdateLastModified
+on _UpdateLastModified
    breakpoint
    put atopia_FetchFolders() into atopiaFolders
    set the displayed_Index ["Atopia Folders"] of indexView to atopiaFolders
@@ -287,9 +290,9 @@ on menu_UpdateLastModified
    set the socketTimeoutInterval to 10000
    --
    lcw_Answer "Store newly created Atopia Fedray?", indexView
-end menu_UpdateLastModified
+end _UpdateLastModified
 
-on menu_TestLastModified indexView
+on _TestLastModified indexView
    put the displayed_Index of indexView into atopiaDomains
    --
    put fedwiki_CheckWithSitemapArray (atopiaDomains, empty, indexView) into resultArray
@@ -321,45 +324,38 @@ on menu_TestLastModified indexView
    --
    set the title_Menu of displayView to "Global | Wiki | LastModified | Menu"
    set the line_Menu of displayView to "Global | Wiki | LastModified | Line | Menu"
-end menu_TestLastModified
+end _TestLastModified
 
 on _
 end _
 
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
-on menu_LaunchAtopiaDomainIndex
+on _LaunchAtopiaDomainIndex
    fedwiki_Launch "server.fedwiki.org", "Atopia Domain Index"
-end menu_LaunchAtopiaDomainIndex
+end _LaunchAtopiaDomainIndex
 
-on menu_DisplayAtopiaFedray indexView
+on _DisplayAtopiaFedray indexView
    display_AtopiaFedray indexView
-end menu_DisplayAtopiaFedray
+end _DisplayAtopiaFedray
 
 on _
 end _
 
-on menu_UpdateAtopiaConfig
+on _UpdateAtopiaConfig
    put atopia_FetchConfigArray() into configArray
    atopia_SetConfigArray configArray
    --
    display_AtopiaConfigJson
-end menu_UpdateAtopiaConfig
+end _UpdateAtopiaConfig
 
-on menu_UpdateDigitalOceanArrays
+on _UpdateDigitalOceanArrays
    digitalOcean_FetchAndSetDropletArrays
    lcw_AnswerWarning "Updated local Droplet, and domain arrays for Digital Ocean"
-end menu_UpdateDigitalOceanArrays
+end _UpdateDigitalOceanArrays
 
 on _
 end _
 
-on menu_OldReconstructAtopiaMetadata displayView
+on _OldReconstructAtopiaMetadata displayView
    lcw_Answer "Update metadata for all the domains on the Atopia server?", displayView
    -- put atopia_ListNewRosterFolders() into atopiaDomains -- recently added (not in roster)
    put atopia_FetchFolders() into atopiaDomains
@@ -370,34 +366,34 @@ on menu_OldReconstructAtopiaMetadata displayView
    display_Data resultArray, the short date, "Result"
    put resultArray ["Updated"] into addedArray
    put the keys of addedArray into newSites
-end menu_OldReconstructAtopiaMetadata
+end _OldReconstructAtopiaMetadata
 
-on menu_UpdateAtopiaLastModified displayView
+on _UpdateAtopiaLastModified displayView
    lcw_Answer "Update the last modified for recently modified Atopia domains?", displayView
    atopia_UpdateLastModifiedDomains displayView
-end menu_UpdateAtopiaLastModified
+end _UpdateAtopiaLastModified
 
 on _
 end _
 
-on menu_TestAtopiaFolders displayView
+on _TestAtopiaFolders displayView
    put atopia_FetchFolders() into atopiaFolders
    fedray_LoadUpdateTests atopiaFolders, displayView
-end menu_TestAtopiaFolders
+end _TestAtopiaFolders
 
-on menu_FedrayLoadUpdate displayView
+on _FedrayLoadUpdate displayView
    put the displayed_Index of displayView into atopiaFolders
    fedray_LoadUpdateTests atopiaFolders, displayView
-end menu_FedrayLoadUpdate
+end _FedrayLoadUpdate
 
 on _
 end _
 
-on menu_UpdateFederation
+on _UpdateFederation
    display_UpdateFederation
-end menu_UpdateFederation
+end _UpdateFederation
 
-on menu_CheckAtopiaDomainArray displayView
+on _CheckAtopiaDomainArray displayView
    put the displayed_Array of displayView into atopiaDomainArray
    put the keys of atopiaDomainArray into atopiaDomains
    repeat for each line wikiDomain in atopiaDomains
@@ -405,34 +401,31 @@ on menu_CheckAtopiaDomainArray displayView
       load url sitemapURL with "atopia_CheckDomainAndUpdateMetadata"
       exit repeat
    end repeat
-end menu_CheckAtopiaDomainArray
+end _CheckAtopiaDomainArray
 
 on _
 end _
 
-on _
-end _
-
-on menu_UpdateFederation indexView
+on _UpdateFederation indexView
    display_UpdateFederation
-end menu_UpdateFederation
+end _UpdateFederation
 
-on menu_UpdateBothFedrays indexView
+on _UpdateBothFedrays indexView
    display_UpdateBothFedrays indexView
-end menu_UpdateBothFedrays
+end _UpdateBothFedrays
 
 on _
 end _
 
-on menu_AddNewFederationSites indexView
+on _AddNewFederationSites indexView
    -- only updates indexes (no trashing) - uses "fedray_UpdateLastModified"
    display_AndAddNewFederationSites indexView
-end menu_AddNewFederationSites
+end _AddNewFederationSites
 
 on _
 end _
 
-on menu_StoreAtopiaFoldersAsRoster indexView
+on _StoreAtopiaFoldersAsRoster indexView
    put atopia_FetchFolders() into atopiaDomains
    set the displayed_Index ["Atopia Folders"] of indexView to atopiaDomains
    lcw_Answer "Store the displayed domains to the roster on server.fedwiki.org?", indexView
@@ -447,9 +440,9 @@ on menu_StoreAtopiaFoldersAsRoster indexView
       put atopiaDomains
       answer warning "Failed to store roster!"
    end if
-end menu_StoreAtopiaFoldersAsRoster
+end _StoreAtopiaFoldersAsRoster
 
-on menu_StoreAtopiaFedray indexView
+on _StoreAtopiaFedray indexView
    put atopia_FetchFolders() into atopiaDomains
    set the displayed_Index ["Atopia Folders"] of indexView to atopiaDomains
    --
@@ -465,20 +458,20 @@ on menu_StoreAtopiaFedray indexView
    atopia_StoreDomainArray fedray
    --
    display_AtopiaFedrayDomains
-end menu_StoreAtopiaFedray
+end _StoreAtopiaFedray
 
 on _
 end _
 
-on menu_DisplayMissingSitemaps indexView
+on _DisplayMissingSitemaps indexView
    put the displayed_Array of indexView into resultArray
    put resultArray ["missing sitemap"] into missingDomainArray
    put keys (missingDomainArray) into missingDomains
    url_SortDomainIndex missingDomains
    set the displayed_Index ["Missing CSE Sitemaps"] of indexView to missingDomains
-end menu_DisplayMissingSitemaps
+end _DisplayMissingSitemaps
 
-on menu_UnloadCached
+on _UnloadCached
    put the cachedurls into cURLs
    display_Lines cURLs, "Cached URLs", empty, "menu_UnloadCached"
    put the result into indexView
@@ -492,26 +485,26 @@ on menu_UnloadCached
    --
    put the stack_Name of indexView into stackName
    delete stack stackName
-end menu_UnloadCached
+end _UnloadCached
 
 on _
 end _
 
-on menu_AddOwnedToFedray indexView
+on _AddOwnedToFedray indexView
    put atopia_GetLocalEmailOwnerData() into ownershipArray
    fedray_AddOwnershipArray ownershipArray, "atopia.array"
-end menu_AddOwnedToFedray
+end _AddOwnedToFedray
 
-on menu_BuildAtopiaDnsArray indexView
+on _BuildAtopiaDnsArray indexView
    put "Do you want to build the dns array for all server side (good) wiki folders?" into someQuestion
    lcw_Answer someQuestion, indexView
    --
    atopia_ConstructDnsArray true
    --
-   menu_DisplayAtopiaArray indexView
-end menu_BuildAtopiaDnsArray
+   breakpoint
+end _BuildAtopiaDnsArray
 
-on menu_BuildAtopiaDomainArray someQuestion
+on _BuildAtopiaDomainArray someQuestion
    put "This is very slow! Update instead?" into someQuestion
    lcw_Answer someQuestion, indexView
    --
@@ -519,7 +512,7 @@ on menu_BuildAtopiaDomainArray someQuestion
    atopia_SetData pAtopiaData   
    --
    display_AtopiaDomainErrorArray
-end menu_BuildAtopiaDomainArray
+end _BuildAtopiaDomainArray
 
 
 --> Deps

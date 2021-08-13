@@ -11,13 +11,16 @@ version: 0.2
 -
 local LocalArray
 
-on menu_Init tObject
+getprop menu_Target [tObject]
    put the title_Text of tObject into LocalArray ["titleText"]
    put the displayed_Index of tObject into LocalArray ["displayedIndex"]
    --
    put atopia_ListWelcomeFolders() into LocalArray ["welcomeFolders"]
    put atopia_FetchFolders() into LocalArray ["atopiaFolders"]
-end menu_Init
+   --
+   put the display_View of tObject into displayView
+   return displayView
+end menu_Target
 
 getprop disabled_AtopiaFolders [indexView]
    if LocalArray ["welcomeFolders"] = LocalArray ["atopiaFolders"] then
@@ -122,30 +125,30 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_RecentAtopiaFolders indexView
+on _RecentAtopiaFolders indexView
    put atopia_ListRecentDomains() into recentSites
    set the displayed_Index ["Recent Folders"] of indexView to recentSites
-end menu_RecentAtopiaFolders
+end _RecentAtopiaFolders
 
-on menu_DisplayAtopiaFarms indexView
+on _DisplayAtopiaFarms indexView
    put atopia_FetchOceanFarms() into atopiaFarms
    set the displayed_Index ["Atopia Ocean Farms"] of indexView to atopiaFarms
-end menu_DisplayAtopiaFarms
+end _DisplayAtopiaFarms
 
-on menu_DisplayAtopiaOwners
+on _DisplayAtopiaOwners
    display_LocalAuthorNameData
-end menu_DisplayAtopiaOwners
+end _DisplayAtopiaOwners
 
 on _
 end _
 
-on menu_TodaysAtopiaSites indexView
+on _TodaysAtopiaSites indexView
    put date_GetSinceSeconds ("1 day") into sinceSeconds 
    put atopia_ListRecentDomains (sinceSeconds) into wikiDomains
    set the displayed_Index ["Todays Sites"] of indexView to wikiDomains
-end menu_TodaysAtopiaSites
+end _TodaysAtopiaSites
 
-on menu_RecentAtopiaSites indexView
+on _RecentAtopiaSites indexView
    put lcw_Ask ("List for how many days?", "7 days") into dayNum
    --
    put dayNum && "days" into sincePeriod
@@ -158,90 +161,90 @@ on menu_RecentAtopiaSites indexView
       put dayNum && "Days" into someTitle
    end if
    set the displayed_Index ["Todays Sites"] of indexView to wikiDomains
-end menu_RecentAtopiaSites
+end _RecentAtopiaSites
 
 on _
 end _
 
-on menu_WelcomeAtopiaSites indexView
+on _WelcomeAtopiaSites indexView
    set the displayed_Index ["Welcome Folders"] of indexView to LocalArray ["welcomeFolders"]
-end menu_WelcomeAtopiaSites
+end _WelcomeAtopiaSites
 
-on menu_AtopiaFolders indexView
+on _AtopiaFolders indexView
    set the displayed_Index ["Atopia Folders"] of indexView to LocalArray ["atopiaFolders"]
-end menu_AtopiaFolders
+end _AtopiaFolders
 
-on menu_RecentAtopiaPages
+on _RecentAtopiaPages
    display_RecentAtopiaPages
-end menu_RecentAtopiaPages
+end _RecentAtopiaPages
 
-on menu_RecentFederationPages
+on _RecentFederationPages
    display_RecentScrapePages
-end menu_RecentFederationPages
+end _RecentFederationPages
 
 on _
 end _
 
-on menu_DisplayAtopiaConfig
+on _DisplayAtopiaConfig
    display_AtopiaConfigJson
-end menu_DisplayAtopiaConfig
+end _DisplayAtopiaConfig
 
-on menu_DisplayAtopiaRoster indexView, displayHow
+on _DisplayAtopiaRoster indexView, displayHow
    put atopia_FetchRosterDomains() into atopiaDomains
    set the displayed_Index ["Atopia Roster"] of indexView to atopiaDomains
-end menu_DisplayAtopiaRoster
+end _DisplayAtopiaRoster
 
-on menu_AtopiaFedrayDomains indexView
+on _AtopiaFedrayDomains indexView
    display_AtopiaFedrayDomains indexView
-end menu_AtopiaFedrayDomains
+end _AtopiaFedrayDomains
 
-on menu_DisplayAtopiaDomainArray indexView, displayHow
+on _DisplayAtopiaDomainArray indexView, displayHow
    -- put atopia_ListDomainsFromFedray() into atopiaDomains
    put atopia_FetchDomainArray() into atopiaFedray
    -- set the displayed_Index ["Domain Array"] of indexView to atopiaDomains
    display_Data atopiaFedray, "atopia_FetchDomainArray()", "Atopia"
-end menu_DisplayAtopiaDomainArray
+end _DisplayAtopiaDomainArray
 
 on _
 end _
 
-on menu_DisplayAtopiaFedray
+on _DisplayAtopiaFedray
    local lineMenuTitle
    put atopia_FetchDomainArray() into fedray
    display_Array fedray, "atopia_FetchDomainArray()", "Global | Federation | Build | Menu", lineMenuTitle
-end menu_DisplayAtopiaFedray
+end _DisplayAtopiaFedray
 
-on menu_DisplayFederationArray
+on _DisplayFederationArray
    put fedray_FetchModel() into fedray
    display_Array fedray, "fedray_FetchModel()", "Global | Federation | Build | Menu"
-end menu_DisplayFederationArray
+end _DisplayFederationArray
 
 on _
 end _
 
-on menu_DisplayAtopiaConfig
+on _DisplayAtopiaConfig
    display_AtopiaConfigJson
-end menu_DisplayAtopiaConfig
+end _DisplayAtopiaConfig
 
-on menu_DisplayDropletInfoArray
+on _DisplayDropletInfoArray
    put digitalOcean_GetDropletInfoArray() into DropletInfoArray
    display_Array DropletInfoArray, "digitalOcean_GetDropletInfoArray()"
-end menu_DisplayDropletInfoArray
+end _DisplayDropletInfoArray
 
-on menu_DigitalOceanDomainInfoArray
+on _DigitalOceanDomainInfoArray
    put digitalocean_GetDomainInfoArray() into DomainInfoArray
    display_Array DomainInfoArray, "digitalocean_GetDomainInfoArray()"
-end menu_DigitalOceanDomainInfoArray
+end _DigitalOceanDomainInfoArray
 
 on _
 end _
 
-on menu_TopDomainTsv indexView, cseName
+on _TopDomainTsv indexView, cseName
    put atopia_FetchTopTSV (cseName)
-end menu_TopDomainTsv
+end _TopDomainTsv
 
-on menu_LocalOwnershipArray indexView   
+on _LocalOwnershipArray indexView   
    put atopia_GetLocalEmailOwnerData() into ownershipArray
    -- put dynadot_FetchIndexedDomainArray() into domainArray
    display_Array ownershipArray, "atopia_GetLocalEmailOwnerData()", "Global | Atopia | Tree | Menu"
-end menu_LocalOwnershipArray
+end _LocalOwnershipArray

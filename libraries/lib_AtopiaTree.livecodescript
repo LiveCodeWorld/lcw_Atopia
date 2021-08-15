@@ -18,11 +18,20 @@ This does not come by default on Ubuntu, but is. installed on the Atopia server
 
 --> Atopia | CatModel
 -
+function atopia_ListNewCatFolders
+   put atopia_ConstructCatModel() into atopiaCatModel
+   --
+   put atopiaCatModel ["new sites"] into newSiteArray
+   put keys (newSiteArray) into newAtopiaSites
+   url_SortDomainIndex newAtopiaSites
+   return newAtopiaSites
+end atopia_ListNewCatFolders
+
 function atopia_ConstructCatModel pSinceLastSeconds
    -- all folders changed since pSinceLastSeconds (split into all, ealier, later, empty sites, and new sites)
    if pSinceLastSeconds is empty then
-      -- put atopia_GetLastUpDate() into pSinceLastSeconds
-      put federation_GetLastUpDate() into pSinceLastSeconds
+      put atopia_GetLastUpDate() into pSinceLastSeconds
+      --  put federation_GetLastUpDate() into pSinceLastSeconds
    end if
    
    set the cursor to watch

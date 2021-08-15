@@ -1,14 +1,11 @@
 ﻿script "Global | Atopia | Build | Menu"
 --> MetaData
 -
+copyright: David Bovill
 license: GPLv3
-name: Global_Atopia_Build_Menu
+name: Global | Atopia | Build | Menu
 type: controller
-version: 0.2
-
-on mDoubleUp_WikiDomain displayView, wikiDomain
-   put wikiDomain
-end mDoubleUp_WikiDomain
+version: 0.3
 
 
 --> Menu | Init
@@ -102,13 +99,17 @@ end _UpdateWithoutAtopia
 --> Global | Atopia | Build | Menu
 -
 on menu_UpdateAtopiaFromCatModel displayView
-   put atopia_ConstructCatModel() into atopiaCatModel
-   --
    lcw_Answer "Are you sure you want to trash and update metadata for all these Atopia domains?", displayView
    --
-   atopia_UpdateFromCatModel atopiaCatModel
+   put atopia_GetLastUpDate() into lastUpdateSeconds
+   put atopia_ConstructCatModel (lastUpdateSeconds) into atopiaCatModel
+   --
+   atopia_TrashAndIndex atopiaCatModel
+   atopia_UpdateNewSites atopiaCatModel
+   put the result into statusData
    --
    display_AtopiaCatModel
+   display_Data statusData, "statusData", "Atopia"
 end menu_UpdateAtopiaFromCatModel
 
 on submenu_TransportServer

@@ -26,7 +26,7 @@ command display_AtopiaCatModel pSinceLastSeconds
    if pSinceLastSeconds is empty then put atopia_GetLastUpDate() into pSinceLastSeconds
    put atopia_ConstructCatModel (pSinceLastSeconds) into atopiaCatModel
    --
-   put sinceLastSeconds into displayTitle
+   put pSinceLastSeconds into displayTitle
    convert displayTitle to abbreviated date
    --
    put "Atopia Update" into stackLabel

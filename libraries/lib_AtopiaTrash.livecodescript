@@ -1,7 +1,7 @@
 ﻿script "lib_AtopiaTrash"
 --> MetaData
 -
-copyright: Anonymous
+copyright: David Bovill
 license: GPLv3
 name: lib_AtopiaTrash
 type: library
@@ -21,11 +21,168 @@ For now we also include all new handlers for updating:
 
 --> Working on
 -
+command atopia_UpdateNewSites atopiaCatModel, pAtopiaFedray, pFedray, pResultArray
+   if pAtopiaFedray is empty then put atopia_FetchDomainArray() into pAtopiaFedray
+   if pFedray is empty then put fedray_FetchModel() into pFedray
+   if pResultArray is empty then put atopia_FetchStatusModel() into pResultArray
+   
+   # Add new sites
+   _NewSites atopiaCatModel, pAtopiaFedray, pFedray, pResultArray
+   put the result into addedNew
+   
+   # Delete site pages
+   -- not done yet
+   
+   # Store Fedrays
+   if addedNew is true then
+      atopia_StoreDomainArray pAtopiaFedray
+      fedray_StoreModel pFedray
+   end if
+   atopia_SetLastUpDate lastUpdateSeconds, resultArray, false, milliStart
+   put the result into statusData
+   
+   return statusData
+end atopia_UpdateNewSites
+
+command atopia_TrashAndIndex atopiaCatModel     
+   put the milliseconds into milliStart
+   
+   # Fetch both fedrays so we can update them
+   put atopia_FetchDomainArray() into atopiaFedray
+   put fedray_FetchModel() into fedray
+   put the seconds into lastUpdateSeconds
+   
+   # Trash empty sites (don't delete site pages)
+   _EmptySites atopiaCatModel, resultArray, atopiaFedray, fedray
+   put the result into addedEmpty
+   
+   # Update time of early sites
+   _EarlySites atopiaCatModel, resultArray, atopiaFedray, fedray
+   put the result into addedEarly
+   
+   # Not creatig new sites yet
+   -- atopia_UpdateNewSites atopiaCatModel, atopiaFedray, fedray, resultArray
+   
+   # Store Fedrays
+   if addedEmpty OR addedEarly is true then
+      atopia_StoreDomainArray atopiaFedray
+      fedray_StoreModel fedray
+   end if
+   
+   # Store time of update
+   put the milliseconds - milliStart into resultArray  ["trashAndIndexTime"]
+   atopia_SetLastUpDate lastUpdateSeconds, resultArray, false, milliStart
+   put the result into statusData
+   return statusData 
+end atopia_TrashAndIndex
+
+private command _EmptySites atopiaCatModel, @resultArray, @atopiaFedray, @fedray
+   put atopiaCatModel ["empty sites"] into emptyArray
+   if emptyArray is empty then return false
+   
+   put the milliseconds into milliStart
+   repeat for each key emptyDomain in emptyArray
+      set the cursor to busy
+      
+      # Delete the metadata
+      put fedray [emptyDomain] into resultArray ["removed"][emptyDomain]
+      delete variable atopiaFedray [emptyDomain]
+      delete variable fedray [emptyDomain]
+      
+      # Trash the domain
+      atopia_MoveToTrash emptyDomain
+   end repeat
+   put the milliseconds - milliStart into resultArray  ["emptyTime"]
+   return true
+end _EmptySites
+
+private command _EarlySites atopiaCatModel, @resultArray, @atopiaFedray, @fedray
+   put atopiaCatModel ["earlier"] into earlyArray
+   if earlyArray is empty then return false
+   
+   put the milliseconds into milliStart
+   repeat for each key modifiedDomain in earlyArray
+      set the cursor to busy
+      
+      # Update wikiDomainArray for early site
+      put atopiaFedray [modifiedDomain] into wikiDomainArray
+      if wikiDomainArray is empty then
+         -- should not be
+         put fedray_FetchNewCreateDomainArray (modifiedDomain) into wikiDomainArray
+      end if
+      fedray_UpdateWikiDomainArray wikiDomainArray, modifiedDomain
+      
+      # Update atopiaFedray and fedray
+      put wikiDomainArray into atopiaFedray [modifiedDomain]
+      put wikiDomainArray into fedray [modifiedDomain]
+      put wikiDomainArray into resultArray ["updated"][modifiedDomain]
+   end repeat
+   put the milliseconds - milliStart into resultArray  ["earlyTime"]
+   return true
+end _EarlySites
+
+command fedray_UpdateWikiDomainArray @wikiDomainArray, wikiDomain, pSitemapArray, pUpdateIP
+   if pSitemapArray is empty then put fedwiki_FetchSitemapArray (wikiDomain) into pSitemapArray
+   --
+   put item 2 of the extents of pSitemapArray into pageNum
+   put pageNum into wikiDomainArray ["pages"]
+   --
+   put fedwiki_SitemapLastModified (pSitemapArray) into sitemapLastModified
+   put sitemapLastModified into wikiDomainArray ["last modified"]
+   --
+   if pUpdateIP is true then
+      put dig_GetIP (wikiDomain) into someIP
+      put someIP into wikiDomainArray ["ipAddress"]
+   end if
+end fedray_UpdateWikiDomainArray
+
 function dig_GetIP someDomain
    put merge ("dig [[someDomain]] +short") into someShell
    put shell (someShell) into someIP
    return word 1 to -1 of someIP
 end dig_GetIP
+
+
+--> Atopia | Update | NewSites
+-
+private command _NewSites atopiaCatModel, @atopiaFedray, @fedray, @pResultArray
+   put atopiaCatModel ["new sites"] into newSiteArray
+   if newSiteArray is empty then return false
+   
+   put the milliseconds into milliStart
+   put fedwiki_ListSitemapPages ("sites.fedwiki.org") into fedSitePages
+   repeat for each key newSite in newSiteArray
+      set the cursor to busy
+      
+      -- create new wikiDomainArray
+      put fedray_FetchNewCreateDomainArray (newSite) into wikiDomainArray
+      fedray_UpdateWikiDomainArray wikiDomainArray, newSite
+      
+      -- create site wiki page
+      if newSite is not among the lines of fedSitePages then
+         atopia_CreateFederationSitePage newSite, false
+      end if
+      
+      -- update atopiaFedray and fedray
+      put wikiDomainArray into atopiaFedray [newSite]
+      put wikiDomainArray into fedray [newSite]
+      put wikiDomainArray into pResultArray ["new site"][newSite]
+   end repeat
+   --
+   atopia_DeleteFederationSitesMap
+   put the milliseconds - milliStart into resultArray  ["newTime"]
+   return true
+end _NewSites
+
+
+--> Transport | Trash
+-
+command atopia_UpdateRoster atopiaFedray
+   # Update atopia roster
+   put keys (atopiaFedray) into atopiaDomains
+   url_SortDomainIndex atopiaDomains
+   atopia_StoreRosterDomains atopiaDomains
+end atopia_UpdateRoster
 
 command transport_TrashEmptyDomains emptyDomains
    local resultArray
@@ -86,24 +243,6 @@ command federation_SetLastUpDate pDateInSeconds
 end federation_SetLastUpDate
 
 
---> Fedray
--
-command fedray_UpdateWikiDomainArray @wikiDomainArray, wikiDomain, pSitemapArray, pUpdateIP
-   if pSitemapArray is empty then put fedwiki_FetchSitemapArray (wikiDomain) into pSitemapArray
-   --
-   put item 2 of the extents of pSitemapArray into pageNum
-   put pageNum into wikiDomainArray ["pages"]
-   --
-   put fedwiki_SitemapLastModified (pSitemapArray) into sitemapLastModified
-   put sitemapLastModified into wikiDomainArray ["last modified"]
-   --
-   if pUpdateIP is true then
-      put dig_GetIP (wikiDomain) into someIP
-      put someIP into wikiDomainArray ["ipAddress"]
-   end if
-end fedray_UpdateWikiDomainArray
-
-
 --> Atopia | LastUpdate
 -
 function atopia_GetLaterThanSeconds pSincePeriod
@@ -120,17 +259,6 @@ function atopia_GetLaterThanSeconds pSincePeriod
    end switch
    return laterThanSeconds
 end atopia_GetLaterThanSeconds
-
-function atopia_GetLastUpDate
-   put pageArray_FetchLastUpdated ("fedwiki.org", "last-atopia-update") into lastUpdate
-   return lastUpdate
-end atopia_GetLastUpDate
-
-command atopia_SetLastUpDate pDateInSeconds
-   pageArray_StoreLastUpdated "fedwiki.org", "last-atopia-update", pDateInSeconds
-   put the result into pageArray
-   return pageArray
-end atopia_SetLastUpDate
 
 
 --> Atopia | Update | CatModel
@@ -156,34 +284,6 @@ command atopia_TrashSpam atopiaCatModel
    --
    return pageArray
 end atopia_TrashSpam
-
-command atopia_UpdateFromCatModel atopiaCatModel, pForceAddFedrayCreate  
-   -- fetch both fedrays so we can update them
-   put atopia_FetchDomainArray() into atopiaFedray
-   put fedray_FetchModel() into fedray
-   put atopia_ListFederationSitePages() into fedSitePages
-   put the seconds into lastUpdateSeconds
-   --
-   _EmptySites atopiaCatModel, resultArray, atopiaFedray, fedray
-   _EarlySites atopiaCatModel, resultArray, atopiaFedray, fedray
-   _NewSites atopiaCatModel, resultArray, atopiaFedray, fedray
-   --
-   atopia_DeleteFederationSitesMap
-   
-   -- store Fedrays
-   atopia_StoreDomainArray atopiaFedray
-   fedray_StoreModel fedray
-   
-   -- store atopia roster
-   put keys (atopiaFedray) into atopiaDomains
-   url_SortDomainIndex atopiaDomains
-   atopia_StoreRosterDomains atopiaDomains
-   
-   -- store the time of this update
-   atopia_SetLastUpDate lastUpdateSeconds
-   
-   return resultArray 
-end atopia_UpdateFromCatModel
 
 command atopia_UpdateModified @atopiaCatModel  
    put atopia_FetchDomainArray() into atopiaFedray
@@ -217,65 +317,6 @@ command atopia_UpdateNewSites @atopiaCatModel
    --  
    return resultArray 
 end atopia_UpdateNewSites
-
-private command _NewSites atopiaCatModel, @resultArray, @atopiaFedray, @fedray
-   put fedwiki_ListSitemapPages ("sites.fedwiki.org") into fedSitePages
-   --
-   repeat for each key newSite in atopiaCatModel ["new sites"]
-      set the cursor to busy
-      
-      -- create new wikiDomainArray
-      put fedray_FetchNewCreateDomainArray (newSite) into wikiDomainArray
-      fedray_UpdateWikiDomainArray wikiDomainArray, newSite
-      
-      -- create site wiki page
-      if newSite is not among the lines of fedSitePages then
-         atopia_CreateFederationSitePage newSite, false
-      end if
-      
-      -- update atopiaFedray and fedray
-      put wikiDomainArray into atopiaFedray [newSite]
-      put wikiDomainArray into fedray [newSite]
-      put wikiDomainArray into resultArray ["new site"][newSite]
-   end repeat
-end _NewSites
-
-private command _EmptySites atopiaCatModel, @resultArray, @atopiaFedray, @fedray
-   repeat for each key emptyDomain in atopiaCatModel ["empty sites"]
-      set the cursor to busy
-      -- let's delete the metadata
-      put fedray [emptyDomain] into resultArray ["removed"][emptyDomain]
-      delete variable atopiaFedray [emptyDomain]
-      delete variable fedray [emptyDomain]
-      
-      -- trash the domain
-      atopia_MoveToTrash emptyDomain
-      
-      -- delete sites page if it exists
-      if emptyDomain is among the lines of fedSitePages then
-         atopia_DeleteFederationSitePage
-      end if
-   end repeat
-end _EmptySites
-
-private command _EarlySites atopiaCatModel, @resultArray, @atopiaFedray, @fedray
-   repeat for each key modifiedDomain in atopiaCatModel ["earlier"]
-      set the cursor to busy
-      
-      -- get existing wikiDomainArray and update it
-      put atopiaFedray [modifiedDomain] into wikiDomainArray
-      if wikiDomainArray is empty then
-         -- should not be, but let's recreate anyway
-         put fedray_FetchNewCreateDomainArray (modifiedDomain) into wikiDomainArray
-      end if
-      fedray_UpdateWikiDomainArray wikiDomainArray, modifiedDomain
-      
-      -- update atopiaFedray and fedray
-      put wikiDomainArray into atopiaFedray [modifiedDomain]
-      put wikiDomainArray into fedray [modifiedDomain]
-      put wikiDomainArray into resultArray ["updated"][modifiedDomain]
-   end repeat
-end _EarlySites
 
 command atopia_SetLastAtopiaUpdateRosters atopiaCatModel
    put atopia_ConstructLastAtopiaUpdatePageArray (atopiaCatModel) into pageArray

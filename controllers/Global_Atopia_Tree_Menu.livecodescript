@@ -30,33 +30,13 @@ end submenu_Home
 on _
 end _
 
-on submenu_Federation
-   return "Global | Federation | Display | Menu"
-end submenu_Federation
-
 on submenu_Build
    return "Global | Atopia | Build | Menu"
 end submenu_Build
 
-on _
-end _
-
 on menu_DisplayTransportLibs
    display_TransporterLibs
 end menu_DisplayTransportLibs
-
-on menu_DisplayFederationServers
-   display_FederationServers
-end menu_DisplayFederationServers
-
-on menu_FederationBuilder
-   display_FederationBuilder
-end menu_FederationBuilder
-
-on menu_WardsFedrayUpdater
-   put fedray_FetchWards() into fedray
-   display_FedrayUpdate fedray, "Federation Fedray"
-end menu_WardsFedrayUpdater
 
 on _
 end _
@@ -68,33 +48,33 @@ end submenu_Dev
 
 --> Dev | Menu
 -
-on menu_MyUpdatedPageArray
+on _MyUpdatedPageArray
    put author_FetchUpdatedPageArray ("David Bovill", "1 day") into pageArray
    display_PageArray pageArray
-end menu_MyUpdatedPageArray
+end _MyUpdatedPageArray
 
 on _
 end _
 
-on menu_UnloadSitemaps
+on _UnloadSitemaps
    fedwiki_UnloadSitemaps
-end menu_UnloadSitemaps
+end _UnloadSitemaps
 
 on _
 end _
 
-on menu_DisplayAtopiaFedray
+on _DisplayAtopiaFedray
    display_AtopiaFedray
-end menu_DisplayAtopiaFedray
+end _DisplayAtopiaFedray
 
-on menu_AtopiaFedrayUpdater
+on _AtopiaFedrayUpdater
    put atopia_FetchDomainArray() into fedray
    display_FedrayUpdate fedray, "Atopia Fedray"
-end menu_AtopiaFedrayUpdater
+end _AtopiaFedrayUpdater
 
-on menu_LaunchAtopiaFedrayPage   
+on _LaunchAtopiaFedrayPage   
    fedwiki_Launch "server.fedwiki.org", "atopia-domain-index"
-end menu_LaunchAtopiaFedrayPage
+end _LaunchAtopiaFedrayPage
 
 on _
 end _
@@ -103,15 +83,15 @@ end _
 display_LocalAuthorNameData
 end menu_DisplayLocalAuthorNameData
 
-on menu_TestTokenArray
+on _TestTokenArray
    put atopia_FetchTokensArray ("roster.fedwiki.org") into tokenArray
    display_Array tokenArray
-end menu_TestTokenArray
+end _TestTokenArray
 
 on _
 end _
 
-on menu_CheckGoogled indexView
+on _CheckGoogled indexView
    put atopia_FetchFolders() into allDomains
    set the displayed_Index ["Googled Folders"] of indexView to allDomains
    lcw_Answer "Check all Atopia Folders for CSE status, and display coloured line result?", indexView
@@ -149,7 +129,7 @@ on menu_CheckGoogled indexView
    set the displayed_Index ["Missing CSE Domains"] of indexView to missingDomains
    --
    display_Array resultArray, "Atopia,Google CSE Status"
-end menu_CheckGoogled
+end _CheckGoogled
 
 
 --> Atopia | Tokens

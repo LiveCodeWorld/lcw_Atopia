@@ -18,7 +18,7 @@ command display_TransportModels
    display_Data shortFiles, "Models", "Transport Server"
    put the result into displayView
    --
-   display_SetInteractions displayView, "Transport | Model", "doubleUp_TransportModel"
+   display_SetInteractions displayView, "Transport | Model", "mDoubleUp_TransportModel"
    return displayView
 end display_TransportModels
 

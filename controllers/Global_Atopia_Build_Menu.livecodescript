@@ -119,6 +119,10 @@ end submenu_TransportServer
 on _
 end _
 
+on submenu_Home
+   return "Global | Atopia | Home | Menu"
+end submenu_Home
+
 on menu_Refresh
    display_AtopiaCatModel
 end menu_Refresh
@@ -176,28 +180,6 @@ end _UpdateFedray
 
 on _
 end _
-
-on _BuildWardsWithoutAtopia displayView
-   set the cursor to watch
-   --
-   put atopia_FetchDomainArray() into fedray
-   put fedray_FetchUnion() into fedrayWithoutAtopia
-   --
-   difference fedrayWithoutAtopia with fedray
-   put the keys of fedrayWithoutAtopia into withoutAtopiaDomains
-   -- 
-   _BuildWithoutAtopia fedray, withoutAtopiaDomains, displayView
-   put the result into resultArray
-   --
-   -- lcw_Answer "Store fedray?", displayView
-   fedray_StoreModel fedray
-   --
-   display_Data resultArray, "WithoutAtopia", "Build Wards"
-   put the result into displayView
-   set the title_Menu of displayView to "Global | Fedray | Rebuild | Menu" 
-   --
-   return resultArray
-end _BuildWardsWithoutAtopia
 
 on _RebuildNewAtopiaFedray displayView
    put atopia_FetchFolders() into atopiaDomains
@@ -266,13 +248,6 @@ end _RebuildAtopiaFedray
 on _
 end _
 
-on _CheckDisplayedLastModified displayView
-   put the displayed_Index of displayView into wikiDomains
-   put fedwiki_CheckWithSitemapArray (wikiDomains, 7) into resultArray
-   --
-   display_Data resultArray, "7 days", "fedwiki_CheckWithSitemapArray"
-end _CheckDisplayedLastModified
-
 on _UpdateLastModified
    breakpoint
    put atopia_FetchFolders() into atopiaFolders
@@ -331,17 +306,6 @@ end _TestLastModified
 on _
 end _
 
-on _LaunchAtopiaDomainIndex
-   fedwiki_Launch "server.fedwiki.org", "Atopia Domain Index"
-end _LaunchAtopiaDomainIndex
-
-on _DisplayAtopiaFedray indexView
-   display_AtopiaFedray indexView
-end _DisplayAtopiaFedray
-
-on _
-end _
-
 on _UpdateAtopiaConfig
    put atopia_FetchConfigArray() into configArray
    atopia_SetConfigArray configArray
@@ -353,76 +317,6 @@ on _UpdateDigitalOceanArrays
    digitalOcean_FetchAndSetDropletArrays
    lcw_AnswerWarning "Updated local Droplet, and domain arrays for Digital Ocean"
 end _UpdateDigitalOceanArrays
-
-on _
-end _
-
-on _OldReconstructAtopiaMetadata displayView
-   lcw_Answer "Update metadata for all the domains on the Atopia server?", displayView
-   -- put atopia_ListNewRosterFolders() into atopiaDomains -- recently added (not in roster)
-   put atopia_FetchFolders() into atopiaDomains
-   --
-   display_TrashUpdateAtopia atopiaDomains, displayView
-   put the result into resultArray
-   --
-   display_Data resultArray, the short date, "Result"
-   put resultArray ["Updated"] into addedArray
-   put the keys of addedArray into newSites
-end _OldReconstructAtopiaMetadata
-
-on _UpdateAtopiaLastModified displayView
-   lcw_Answer "Update the last modified for recently modified Atopia domains?", displayView
-   atopia_UpdateLastModifiedDomains displayView
-end _UpdateAtopiaLastModified
-
-on _
-end _
-
-on _TestAtopiaFolders displayView
-   put atopia_FetchFolders() into atopiaFolders
-   fedray_LoadUpdateTests atopiaFolders, displayView
-end _TestAtopiaFolders
-
-on _FedrayLoadUpdate displayView
-   put the displayed_Index of displayView into atopiaFolders
-   fedray_LoadUpdateTests atopiaFolders, displayView
-end _FedrayLoadUpdate
-
-on _
-end _
-
-on _UpdateFederation
-   display_UpdateFederation
-end _UpdateFederation
-
-on _CheckAtopiaDomainArray displayView
-   put the displayed_Array of displayView into atopiaDomainArray
-   put the keys of atopiaDomainArray into atopiaDomains
-   repeat for each line wikiDomain in atopiaDomains
-      put fedwiki_JsonSiteMapUrl (wikiDomain) into sitemapURL
-      load url sitemapURL with "atopia_CheckDomainAndUpdateMetadata"
-      exit repeat
-   end repeat
-end _CheckAtopiaDomainArray
-
-on _
-end _
-
-on _UpdateFederation indexView
-   display_UpdateFederation
-end _UpdateFederation
-
-on _UpdateBothFedrays indexView
-   display_UpdateBothFedrays indexView
-end _UpdateBothFedrays
-
-on _
-end _
-
-on _AddNewFederationSites indexView
-   -- only updates indexes (no trashing) - uses "fedray_UpdateLastModified"
-   display_AndAddNewFederationSites indexView
-end _AddNewFederationSites
 
 on _
 end _
@@ -491,11 +385,6 @@ end _UnloadCached
 
 on _
 end _
-
-on _AddOwnedToFedray indexView
-   put atopia_GetLocalEmailOwnerData() into ownershipArray
-   fedray_AddOwnershipArray ownershipArray, "atopia.array"
-end _AddOwnedToFedray
 
 on _BuildAtopiaDnsArray indexView
    put "Do you want to build the dns array for all server side (good) wiki folders?" into someQuestion

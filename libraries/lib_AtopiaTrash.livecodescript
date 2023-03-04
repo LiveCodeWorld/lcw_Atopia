@@ -5,7 +5,7 @@ copyright: David Bovill
 license: GPLv3
 name: lib_AtopiaTrash
 type: library
-version: 0.1
+version: 0.2
 
 /*
 This library is all about trashing folders on the Atopia Server.
@@ -17,6 +17,77 @@ For now we also include all new handlers for updating:
 - 3) Federation Fedray
 - 4) Fedwiki Sites Index
 */
+
+
+--> Working on
+-
+command log_IncrementAverage @sArray, keyPath, nValue
+   split keyPath with comma
+   
+   put sArray [keyPath]["lastMax"] into lastMax
+   put max (nValue, lastMax) into sArray [keyPath]["lastMax"]
+   
+   put sArray [keyPath]["cAverage"] into cAverage
+   put sArray [keyPath]["logNum"] into logNum
+   put math_CumulativeAverage (nValue, cAverage, logNum) into nAverage
+   --
+   put logNum + 1 into sArray [keyPath]["logNum"]
+   put nAverage into sArray [keyPath]["cAverage"]
+end log_IncrementAverage
+
+function math_CumulativeAverage nValue, lastAv, n
+  return (lastAv * n + nValue) / (n + 1)
+end math_CumulativeAverage
+
+private command _UpdateAtopiaStatusData lastUpdateSeconds, milliStart, atopiStatusData
+   put the milliseconds - milliStart into trashAndIndexTime
+   --   
+   put atopiStatusData ["emptyTime"] into emptyTime
+   put atopiStatusData ["earlyTime"] into earlyTime
+   put atopiStatusData ["newTime"] into newTime
+   
+   # Fetch Model
+   put federation_FetchStatusModel() into fedStatusData
+   
+   # Log
+   if fedStatusData is an array then
+      -- not first time
+      log_IncrementAverage fedStatusData, "Atopia,trashAndIndexTime", trashAndIndexTime
+      if emptyTime is a number then log_IncrementAverage fedStatusData, "Atopia,emptyTime", emptyTime
+      if earlyTime is a number then log_IncrementAverage fedStatusData, "Atopia,earlyTime", earlyTime
+      if newTime is a number then log_IncrementAverage fedStatusData, "Atopia,newTime", newTime
+   end if
+   
+   # Update lastUpdateSeconds
+   put lastUpdateSeconds into fedStatusData ["Atopia"]["lastUpdateSeconds"]
+   
+   # For debugging
+   -- put atopiStatusData ["updated"] into fedStatusData ["Atopia"]["earlyTime"]["updated"]
+   -- put atopiStatusData into fedStatusData ["Atopia"]["last"]
+   
+   # Store Model
+   federation_StoreStatusModel fedStatusData
+   return fedStatusData
+end _UpdateAtopiaStatusData
+
+function atopia_GetLastUpDate
+   put federation_FetchStatusModel() into statusData
+   put statusData ["Atopia"]["lastUpdateSeconds"] into lastUpdateSeconds
+   return lastUpdateSeconds
+end atopia_GetLastUpDate
+
+command atopia_SetLastUpDate lastUpdateSeconds, pStatusData, pAddToLastAtopiaUpdate
+   if pStatusData is not an array then put federation_FetchStatusModel() into pStatusData
+   
+   # Update lastUpdateSeconds
+   put lastUpdateSeconds into pStatusData ["Atopia"]["lastUpdateSeconds"]
+   federation_StoreStatusModel pStatusData
+   
+   if pAddToLastAtopiaUpdate then
+      pageArray_StoreLastUpdated "fedwiki.org", "last-atopia-update", pDateInSeconds
+   end if
+   return pStatusData
+end atopia_SetLastUpDate
 
 
 --> To Organise
@@ -57,9 +128,10 @@ command federation_SetLastUpDate pDateInSeconds
 end federation_SetLastUpDate
 
 
---> Working on
+--> Atopia | TrashAndIndex
 -
-command atopia_TrashAndIndex atopiaCatModel     
+command atopia_TrashAndIndex atopiaCatModel
+   local resultArray   
    put the milliseconds into milliStart
    
    # Fetch both fedrays so we can update them
@@ -85,16 +157,15 @@ command atopia_TrashAndIndex atopiaCatModel
    end if
    
    # Store time of update
-   put the milliseconds - milliStart into resultArray  ["trashAndIndexTime"]
-   atopia_SetLastUpDate lastUpdateSeconds, resultArray, false, milliStart
-   put the result into statusData
-   return statusData 
+   _UpdateAtopiaStatusData lastUpdateSeconds, milliStart, resultArray
+   put the result into fedStatusData
+   return fedStatusData
 end atopia_TrashAndIndex
 
 command atopia_UpdateNewSites atopiaCatModel, pAtopiaFedray, pFedray, pResultArray
    if pAtopiaFedray is empty then put atopia_FetchDomainArray() into pAtopiaFedray
    if pFedray is empty then put fedray_FetchModel() into pFedray
-   if pResultArray is empty then put atopia_FetchStatusModel() into pResultArray
+   if pResultArray is empty then put federation_FetchStatusModel() into pResultArray
    
    # Add new sites
    _NewSites atopiaCatModel, pAtopiaFedray, pFedray, pResultArray
@@ -169,29 +240,10 @@ function atopia_ConstructNewSiteButton newDomain
 end atopia_ConstructNewSiteButton
 
 
-
---> Atopia | LastUpdate
--
-function atopia_GetLaterThanSeconds pSincePeriod
-   -- converts user-friendly pSincePeriod to seconds
-   switch pSincePeriod
-      case "last update"
-         put atopia_GetLastUpDate() into laterThanSeconds
-         break
-      case empty
-         put date_GetSinceSeconds ("1 week") into laterThanSeconds
-         break
-      default
-         put date_GetSinceSeconds (pSincePeriod) into laterThanSeconds
-   end switch
-   return laterThanSeconds
-end atopia_GetLaterThanSeconds
-
-
 --> Atopia | Update | CatModel
 -
 command atopia_TrashAndUpdateModified
-   put transport_FetchAtopiaCatModel() into atopiaCatModel
+   put atopia_FetchCatModel() into atopiaCatModel
    atopia_TrashSpam atopiaCatModel
    atopia_UpdateModified atopiaCatModel
    return atopiaCatModel
@@ -225,7 +277,7 @@ command atopia_UpdateModified @atopiaCatModel
    put laterArray into atopiaCatModel ["later"]
    -- 
    -- store Fedrays
-   transport_StoreAtopiaCatModel atopiaCatModel
+   atopia_StoreCatModel atopiaCatModel
    atopia_StoreDomainArray atopiaFedray
    fedray_StoreModel fedray
    --  
@@ -238,7 +290,7 @@ command atopia_UpdateNewSites @atopiaCatModel
    --
    _NewSites atopiaCatModel, resultArray, atopiaFedray, fedray
    --   -- store Fedrays
-   transport_StoreAtopiaCatModel atopiaCatModel
+   atopia_StoreCatModel atopiaCatModel
    atopia_StoreDomainArray atopiaFedray
    fedray_StoreModel fedray
    --  
@@ -478,39 +530,3 @@ private command _UpdateLastModified emptyDomain, @atopiaFedray, @resultArray
       put atopiaFedray [emptyDomain] into resultArray ["good"][emptyDomain]
    end if
 end _UpdateLastModified
-
-private function date_GetSinceSeconds sincePeriod, pSinceSeconds
-   -- used for user friendly dispay / input
-   if pSinceSeconds is empty then
-      put the seconds into pSinceSeconds
-   end if
-   --
-   put word 1 of sincePeriod into sinceNum
-   put word 2 of sincePeriod into sinceWord
-   --
-   switch sinceWord
-      case "min"
-      case "mins"
-      case "minute"
-      case "minutes"
-         put sinceNum * 60 into periodInSeconds
-         break
-      case "hour"
-      case "hours"
-         put sinceNum * 60 * 60 into periodInSeconds
-         break
-      case "day"
-      case "days"
-         put sinceNum * 24 * 60 * 60 into periodInSeconds
-         break
-      case "week"
-      case "weeks"
-         put sinceNum * 7 * 24 * 60 * 60 into periodInSeconds
-         break
-   end switch
-   subtract periodInSeconds from pSinceSeconds
-   --
-   return pSinceSeconds
-end date_GetSinceSeconds
-
-

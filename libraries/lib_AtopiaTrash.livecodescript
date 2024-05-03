@@ -234,7 +234,7 @@ end atopia_FetchServerIP
 
 function atopia_ConstructNewSiteButton newDomain
    put newDomain into inputKeyValueArray ["wikiDomain"]
-   put "https://rest.livecode.world/update/createSite" into postURL
+   put "http://rest.livecode.world/update/createSite" into postURL
    put fedwiki_ConstructButtonForm (newDomain, postURL, inputKeyValueArray) into someHTML
    return someHTML
 end atopia_ConstructNewSiteButton
@@ -300,7 +300,7 @@ end atopia_UpdateNewSites
 command atopia_SetLastAtopiaUpdateRosters atopiaCatModel
    put atopia_ConstructLastAtopiaUpdatePageArray (atopiaCatModel) into pageArray
    --
-   pageArray_Store "fedwiki.org", "last-atopia-update", pageArray, true
+   pageArray_Set "fedwiki.org", "last-atopia-update", pageArray, true
    return pageArray
 end atopia_SetLastAtopiaUpdateRosters
 

@@ -317,7 +317,7 @@ function atopia_ConstructLastAtopiaUpdatePageArray atopiaCatModel
    --
    put the keys of atopiaCatModel ["empty sites"] into emptyDomains
    url_SortDomainIndex emptyDomains
-   put fedwiki_MarkdownIndex (emptyDomains) into rosterText
+   put markdown_LinkedBullets (emptyDomains) into rosterText
    pageArray_SetItemText pageArray, "e88ba1f3f71092cf", rosterText
    --
    return pageArray

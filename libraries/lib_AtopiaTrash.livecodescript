@@ -234,7 +234,7 @@ end atopia_FetchServerIP
 
 function atopia_ConstructNewSiteButton newDomain
    put newDomain into inputKeyValueArray ["wikiDomain"]
-   put "http://rest.livecode.world/update/createSite" into postURL
+   put platform_RestURL ("update/createSite") into postURL
    put fedwiki_ConstructButtonForm (newDomain, postURL, inputKeyValueArray) into someHTML
    return someHTML
 end atopia_ConstructNewSiteButton

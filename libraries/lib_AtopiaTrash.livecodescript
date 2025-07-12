@@ -84,7 +84,7 @@ command atopia_SetLastUpDate lastUpdateSeconds, pStatusData, pAddToLastAtopiaUpd
    federation_StoreStatusModel pStatusData
    
    if pAddToLastAtopiaUpdate then
-      pageArray_StoreLastUpdated "fedwiki.org", "last-atopia-update", pDateInSeconds
+      pageArray_StoreLastUpdated "fedwiki.club", "last-atopia-update", pDateInSeconds
    end if
    return pStatusData
 end atopia_SetLastUpDate
@@ -117,12 +117,12 @@ end dig_GetIP
 --> Federation | LastUpdate
 -
 function federation_GetLastUpDate
-   put pageArray_FetchLastUpdated ("fedwiki.org", "last-federation-update") into lastUpdate
+   put pageArray_FetchLastUpdated ("fedwiki.club", "last-federation-update") into lastUpdate
    return lastUpdate
 end federation_GetLastUpDate
 
 command federation_SetLastUpDate pDateInSeconds
-   pageArray_StoreLastUpdated "fedwiki.org", "last-federation-update", pDateInSeconds
+   pageArray_StoreLastUpdated "fedwiki.club", "last-federation-update", pDateInSeconds
    put the result into pageArray
    return pageArray
 end federation_SetLastUpDate
@@ -258,7 +258,7 @@ command atopia_TrashSpam atopiaCatModel
    put the result into resultArray
    put resultArray ["atopiaFedray"] into atopiaFedray
    --
-   put pageArray_Fetch ("fedwiki.org", "last-atopia-update") into pageArray
+   put pageArray_Fetch ("fedwiki.club", "last-atopia-update") into pageArray
    pageArray_SetItemText pageArray, "e88ba1f3f71092cf", empty
    --
    return pageArray
@@ -300,14 +300,14 @@ end atopia_UpdateNewSites
 command atopia_SetLastAtopiaUpdateRosters atopiaCatModel
    put atopia_ConstructLastAtopiaUpdatePageArray (atopiaCatModel) into pageArray
    --
-   pageArray_Set "fedwiki.org", "last-atopia-update", pageArray, true
+   pageArray_Set "fedwiki.club", "last-atopia-update", pageArray, true
    return pageArray
 end atopia_SetLastAtopiaUpdateRosters
 
 function atopia_ConstructLastAtopiaUpdatePageArray atopiaCatModel
    if atopiaCatModel is not an array then return empty
    --
-   put pageArray_Fetch ("fedwiki.org", "last-atopia-update") into pageArray
+   put pageArray_Fetch ("fedwiki.club", "last-atopia-update") into pageArray
    --
    put "Last Atopia Update:" && the internet date into dateString
    pageArray_SetFirstItem pageArray, "code", dateString
@@ -363,7 +363,7 @@ command atopia_MoveToTrash shortWikiFolder
    put atopia_TrashFolder() into trashFolder
    put "mv -f" && kwote (remoteWikiFolderPath) && kwote (trashFolder) into remoteShell
    --
-   put "ssh root@fedwiki.org" && remoteShell into someShell
+   put "ssh root@fedwiki.club" && remoteShell into someShell
    put shell (someShell) into moveResult
    --    
    return moveResult
@@ -379,7 +379,7 @@ command atopia_DeleteFolderInTrash trashDomain
    put atopia_FolderInTrashFolder (trashDomain) into folderInTrashFolder
    put "rm -rf" && folderInTrashFolder into remoteShell
    --
-   put "ssh root@fedwiki.org" && remoteShell into someShell
+   put "ssh root@fedwiki.club" && remoteShell into someShell
    put shell (someShell) into shellResult
    --
    put the result into deleteResult
@@ -390,7 +390,7 @@ command atopia_SimpleMoveToUnhosted domainFolder
    put atopia_UnhostedFolder() into unhostedFolder
    put "mv" && domainFolder && unhostedFolder into remoteShell
    --
-   put "ssh root@fedwiki.org" && remoteShell into someShell
+   put "ssh root@fedwiki.club" && remoteShell into someShell
    put shell (someShell) into shellResult
    --
    put the result into moveResult
@@ -401,7 +401,7 @@ function atopia_TrashFolderExists trashDomain
    put atopia_FolderInTrashFolder (trashDomain) into folderInTrashFolder
    put "ls -la" && folderInTrashFolder into remoteShell
    --
-   put "ssh root@fedwiki.org" && remoteShell into someShell
+   put "ssh root@fedwiki.club" && remoteShell into someShell
    put shell (someShell) into shellResult
    --
    if the result begins with "ls: cannot access" then
@@ -464,7 +464,7 @@ private command _NewSites atopiaCatModel, @atopiaFedray, @fedray, @pResultArray
    if newSiteArray is empty then return false
    
    put the milliseconds into milliStart
-   put fedwiki_ListSitemapPages ("sites.fedwiki.org") into fedSitePages
+   put fedwiki_ListSitemapPages ("sites.fedwiki.club") into fedSitePages
    repeat for each key newSite in newSiteArray
       set the cursor to busy
       

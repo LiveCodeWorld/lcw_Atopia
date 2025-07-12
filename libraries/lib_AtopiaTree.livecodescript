@@ -196,7 +196,7 @@ function atopia_FetchFileTimes pWikiDomain, pUseAccessTimes
    -- ls -Rl --time-style=long-iso /path/to/directory
    -- we don't like doing this. We want handlers that depend on this built into the server (protected with ssh keys)
    
-   put "ssh root@fedwiki.org" into someShell
+   put "ssh root@fedwiki.club" into someShell
    if pUseAccessTimes is true then
       put space & "ls -Rlpu" after someShell
    else
@@ -214,7 +214,7 @@ end atopia_FetchFileTimes
 function atopia_FetchTreeInfo shortFile
    get "tree --noreport --timefmt %s -ifDP '[[shortFile]]' -I '_old_sites|_unhosted_sites|_trash|pages|assets|recycle' /root/.wiki"
    put merge (it) into remoteShell
-   put "ssh root@fedwiki.org" && kwote (remoteShell) into localShell
+   put "ssh root@fedwiki.club" && kwote (remoteShell) into localShell
    put word 1 to -1 of shell (localShell) into shellResult
    return shellResult
 end atopia_FetchTreeInfo
@@ -223,7 +223,7 @@ function atopia_FetchTreeInfoWithWelcome
    -- we don't like doing this. We want handlers that depend on this built into the server (protected with ssh keys)
    -- returns all domains with pages/welcome-visitors
    -- put "tree --noreport -fidD -P '*/pages/welcome-visitors' -L 1 -I '_unhosted_sites' /root/.wiki" into remoteShell -- welcome visitors --prune does not work
-   constant AtopiaDomain = "fedwiki.org"
+   constant AtopiaDomain = "fedwiki.club"
    constant AtopiaSshUser = "root"
    --
    put "tree --noreport --prune -fiDP 'welcome-visitors' -I '_old_sites' /root/.wiki" into remoteShell -- welcome visitors --prune does not work

@@ -1,11 +1,11 @@
 ﻿script "lib_DisplayAtopiaUpdate"
 --> MetaData
 -
-copyright: Anonymous
+copyright: David Bovill
 license: GPLv3
 name: lib_DisplayAtopiaUpdate
 type: library
-version: 0.1
+version: 0.2
 
 /*Some help*/
 
@@ -65,7 +65,7 @@ command display_TrashUpdateAtopiaDomains pIndexView, pAtopiaDomains
    put trashResultArray ["good"] into goodAddedFedray
    atopia_AddFedray goodAddedFedray
    
-   -- update site.fedwiki.org site-pages
+   -- update site.fedwiki.club site-pages
    put the keys of goodAddedFedray into addedDomains
    atopia_CreateFederationSitePages addedDomains, pIndexView
    --
